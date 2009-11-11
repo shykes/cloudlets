@@ -1,0 +1,6 @@
+sandbox-env
+dotcloud
+build
+layers
+pip-log.txt
+.*\.pyc
