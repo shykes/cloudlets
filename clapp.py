@@ -18,7 +18,11 @@ class Image(dict):
         self.path = os.path.abspath(path)
         self.system = system if system else System()
         self.js = js.Context()
-        dict.__init__(self, self.js.eval(file(self.clappfile).read()))
+        if os.path.exists(self.clappfile):
+            js_code = file(self.clappfile).read()
+        else:
+            js_code = "layer = {'volumes': [], 'templates': []}"
+        dict.__init__(self, self.js.eval(js_code))
 
     def get_rootfs(self):
         return self.path
