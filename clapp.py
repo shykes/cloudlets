@@ -12,21 +12,21 @@ from system import System
 from dotcloud.template import EJSTemplate
 from dotcloud import js
 
-class Layer(dict):
+class Image(dict):
 
     def __init__(self, path, system=None):
         self.path = os.path.abspath(path)
         self.system = system if system else System()
         self.js = js.Context()
-        dict.__init__(self, self.js.eval(file(self.clapfile).read()))
+        dict.__init__(self, self.js.eval(file(self.clappfile).read()))
 
     def get_rootfs(self):
         return self.path
     rootfs = property(get_rootfs)
 
-    def get_clapfile(self):
-        return os.path.join(self.path, "clap")
-    clapfile = property(get_clapfile)
+    def get_clappfile(self):
+        return os.path.join(self.path, ".clapp", "clapp.js")
+    clappfile = property(get_clappfile)
 
     def _get_properties(self, this):
         print "Computing properties"
