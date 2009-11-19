@@ -4,3 +4,4 @@ build
 layers
 pip-log.txt
 .*\.pyc
+rootfs_.*
