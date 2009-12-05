@@ -1,8 +1,8 @@
 sandbox-env
 env
 build
-layers
+images
 pip-log.txt
 .*\.pyc
-rootfs_.*
 .*\.egg-info
+.*\.swp
