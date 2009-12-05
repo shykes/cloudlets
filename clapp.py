@@ -8,15 +8,13 @@ import tempfile
 import shutil
 import simplejson as json
 
-from system import System
-from dotcloud.template import EJSTemplate
-from dotcloud import js
+import js
+from ejs import EJSTemplate
 
 class Image(dict):
 
-    def __init__(self, path, system=None):
+    def __init__(self, path):
         self.path = os.path.abspath(path)
-        self.system = system if system else System()
         self.js = js.Context()
         if os.path.exists(self.clappfile):
             js_code = file(self.clappfile).read()
@@ -49,7 +47,7 @@ class Image(dict):
 
     def _copy_rootfs(self, dest):
         print "Copying rootfs from %s" % self.rootfs
-        self.system.sh(["rsync", "-aH", self.rootfs + "/", dest])
+        subprocess.call(["rsync", "-aH", self.rootfs + "/", dest])
 
     def _copy_volumes(self, dest, **sources):
         for volume in self["volumes"]:
@@ -61,7 +59,7 @@ class Image(dict):
                     raise Exception("Required volume '%s' has no source" % volume["name"])
             src = sources[name]
             print "Copying volume %s from %s" % (name, src)
-            self.system.sh(["rsync", "-aH", src + "/", dest + volume["mountpoint"]])
+            subprocess.call(["rsync", "-aH", src + "/", dest + volume["mountpoint"]])
 
     def _apply_templates(self, dest, this={}):
         for template in self["templates"]:
