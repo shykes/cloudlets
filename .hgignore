@@ -1,7 +1,8 @@
 sandbox-env
-dotcloud
+env
 build
 layers
 pip-log.txt
 .*\.pyc
 rootfs_.*
+.*\.egg-info
