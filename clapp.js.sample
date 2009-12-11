@@ -1,4 +1,4 @@
-layer = {
+{
     "author":       "Solomon Hykes <solomon.hykes@dotcloud.com>",
     "description":  "Debian (Lenny/5.0) base system for i386",
     "arch":         "i386",
