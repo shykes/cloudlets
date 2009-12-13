@@ -30,12 +30,12 @@
         "/etc/nologin$",
         "/dev/log$",
         "/var/lib/urandom/random-seed$",
-        "/usr/lib/python2.6/.+\.pyc",
+        "/usr/lib/python2.6/.+\\.pyc",
         "/var/lib/apt/lists/(?!partial).+",
         "/var/lib/apt/lists/partial/.+",
         "/var/cache/apt/pkgcache.bin$",
         "/var/cache/apt/srcpkgcache.bin$",
-        "/var/cache/apt/archives/.+\.deb",
+        "/var/cache/apt/archives/.+\\.deb",
         "/var/cache/apt/archives/partial/.+",
         "/var/cache/debconf/.+"
     ]
