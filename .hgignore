@@ -1,8 +1,11 @@
 sandbox-env
 env
-build
+^build$
 images
 pip-log.txt
 .*\.pyc
 .*\.egg-info
 .*\.swp
+\.deps
+distribute-.*
+^dist$
