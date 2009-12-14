@@ -28,29 +28,46 @@ class Image(object):
     meta = property(get_meta)
 
     def get_config_schema(self):
-        return self.meta.get("config", {})
+        schema_skeleton =  {
+            "dns": {
+                "nameservers": {"type": "array"}
+            },
+            "ip": {
+                "interfaces": {"type": "array"}
+            },
+            "args": self.args_schema
+        }
+        return {
+            "type": "object",
+            "items": dict([(key, {"type": "object", "items": section}) for (key, section) in schema_skeleton.items()])
+        }
     config_schema = property(get_config_schema)
 
+    def get_args_schema(self):
+        return self.meta.get("args", {})
+    args_schema = property(get_args_schema)
+
     def validate_config(self, **config):
-        jsonschema.validate(config, {"type": "object", "items": self.meta.get("config", {})})
+        jsonschema.validate(config, self.config_schema)
 
     def configure(self, **config):
         self.validate_config(**config)
-        template_args = {
-            "config"    : config,
-            "inet"      : [],
-            "dns"       : {"nameservers": []}
-        }
         for template in self.meta.get("templates", []):
-            print "Applying template %s with %s" % (template, template_args)
-            EJSTemplate(self.path + template).apply(self.path + template, template_args)
+            print "Applying template %s with %s" % (template, config)
+            EJSTemplate(self.path + template).apply(self.path + template, config)
 
 def main(args):
     if len(args[1:]) < 2:
         print "Usage: %s image_path json_config" % args[0]
         return 1
-    print "Configuring image %s with %s" % (args[1], args[2])
-    Image(args[1]).configure(**dict(simplejson.loads(args[2])))
+    image_path = args[1]
+    config = {
+            "args"    : simplejson.loads(args[2]),
+            "ip"      : {"interfaces": []},
+            "dns"       : {"nameservers": []}
+        }
+    print "Configuring image %s with %s" % (image_path, config)
+    Image(image_path).configure(**config)
 
 if __name__ == "__main__":
     import sys

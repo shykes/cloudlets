@@ -4,7 +4,7 @@
     "arch":         "i386",
     "name":         "debian-5.0",
 
-    "config": {
+    "args": {
         "hostname"  : {"type": "string", "default": "debian-host"}
     },
 
