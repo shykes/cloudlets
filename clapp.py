@@ -47,14 +47,29 @@ class Image(object):
         return self.meta.get("args", {})
     args_schema = property(get_args_schema)
 
-    def validate_config(self, **config):
+    def validate_config(self, config):
         jsonschema.validate(config, self.config_schema)
 
-    def configure(self, **config):
-        self.validate_config(**config)
+    def get_config_file(self):
+        return os.path.join(self.path, ".clapp", "applied_config")
+    config_file = property(get_config_file)
+
+    def get_config(self):
+        if not os.path.exists(self.config_file):
+            return None
+        return simplejson.loads(file(self.config_file).read())
+
+    def set_config(self, config):
+        if self.config:
+            raise ValueError("Already configured: %s" % self.config)
+        file(self.config_file, "w").write("")
+        self.validate_config(config)
         for template in self.meta.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.path + template).apply(self.path + template, config)
+        file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
+
+    config = property(get_config, set_config)
 
 def main(args):
     if len(args[1:]) < 2:
@@ -67,7 +82,7 @@ def main(args):
             "dns"       : {"nameservers": []}
         }
     print "Configuring image %s with %s" % (image_path, config)
-    Image(image_path).configure(**config)
+    Image(image_path).config = config
 
 if __name__ == "__main__":
     import sys
