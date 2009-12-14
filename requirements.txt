@@ -1,7 +1,7 @@
 # Specific version of spidermonkey required by js.py:
-http://dotcloud.org.s3.amazonaws.com/davisp-python-spidermonkey-a2084f24770595cc3a2db751327fcf416b28eaaf.tar.gz
+#http://dotcloud.org.s3.amazonaws.com/davisp-python-spidermonkey-a2084f24770595cc3a2db751327fcf416b28eaaf.tar.gz
 # js.py isn't available on pypy yet:
-http://bitbucket.org/dotcloud/js.py/get/tip.gz
+#http://bitbucket.org/dotcloud/js.py/get/tip.gz
 # ejs.py either:
-http://bitbucket.org/dotcloud/ejs.py/get/tip.gz
-http://bitbucket.org/IanLewis/jsonschema/get/0.2a.gz
+#http://bitbucket.org/dotcloud/ejs.py/get/tip.gz
+#http://bitbucket.org/IanLewis/jsonschema/get/0.2a.gz
