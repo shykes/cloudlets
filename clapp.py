@@ -17,13 +17,13 @@ class Image(object):
     def __init__(self, path):
         self.path = os.path.abspath(path)
 
-    def get_clappfile(self):
-        return os.path.join(self.path, ".clapp", "clapp.js")
-    clappfile = property(get_clappfile)
+    def get_metafile(self):
+        return os.path.join(self.path, ".clapp", "meta")
+    metafile = property(get_metafile)
 
     def get_meta(self):
-        if os.path.exists(self.clappfile):
-            return simplejson.loads(file(self.clappfile).read())
+        if os.path.exists(self.metafile):
+            return simplejson.loads(file(self.metafile).read())
         return {}
     meta = property(get_meta)
 
