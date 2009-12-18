@@ -17,8 +17,12 @@ class Image(object):
     def __init__(self, path):
         self.path = os.path.abspath(path)
 
+    def get_clappdir(self):
+        return os.path.join(self.path, ".clapp")
+    clappdir = property(get_clappdir)
+
     def get_metafile(self):
-        return os.path.join(self.path, ".clapp", "meta")
+        return os.path.join(self.clappdir, "meta")
     metafile = property(get_metafile)
 
     def get_meta(self):
@@ -51,7 +55,7 @@ class Image(object):
         jsonschema.validate(config, self.config_schema)
 
     def get_config_file(self):
-        return os.path.join(self.path, ".clapp", "applied_config")
+        return os.path.join(self.clappdir, "applied_config")
     config_file = property(get_config_file)
 
     def get_config(self):
