@@ -3,6 +3,7 @@
 from __future__ import with_statement
 
 import os
+import re
 import subprocess
 import tempfile
 import shutil
@@ -12,10 +13,44 @@ import js
 import jsonschema
 from ejs import EJSTemplate
 
+def filter_path(path, include, exclude):
+    if not hasattr(include, "__iter__"):
+        include = [include]
+    if not hasattr(exclude, "__iter__"):
+        exclude = [exclude]
+    def match_filters(path, filters):
+        return any([f.match(path) if hasattr(f, "match") else f == path for f in filters])
+    return match_filters(path, include) or not match_filters(path, exclude)
+
 class Image(object):
 
     def __init__(self, path):
         self.path = os.path.abspath(path)
+
+    def get_files(self, include=[], exclude=[]):
+        for (basepath, dpaths, fpaths) in os.walk(self.path, topdown=True):
+            if basepath == self.clappdir:
+                continue
+            for subpath in dpaths + fpaths:
+                path = os.path.join(basepath.replace(self.path, ""), subpath)
+                if filter_path(path, include, exclude):
+                    yield path
+    files = property(get_files)
+
+    def get_fs_templates(self):
+        return list(self.get_files(exclude=re.compile(".*"), include=self.meta.get("templates", [])))
+    fs_templates = property(get_fs_templates)
+
+    def get_fs_ignore(self):
+        return list(self.get_files(exclude=re.compile(".*"), include=map(re.compile, self.meta.get("ignore", []))))
+    fs_ignore = property(get_fs_ignore)
+
+    def get_fs_persistent(self):
+        return list(self.get_files(exclude=re.compile(".*"), include=self.meta.get("persistent", [])))
+    fs_persistent = property(get_fs_persistent)
+
+        
+
 
     def get_clappdir(self):
         return os.path.join(self.path, ".clapp")
