@@ -49,8 +49,9 @@ class Image(object):
         return list(self.get_files(exclude=re.compile(".*"), include=self.meta.get("persistent", [])))
     fs_persistent = property(get_fs_persistent)
 
-        
-
+    def get_fs_other(self):
+        return list(self.get_files(exclude=self.meta.get("templates") + map(re.compile, self.meta.get("ignore")) + self.meta.get("persistent")))
+    fs_other = property(get_fs_other)
 
     def get_clappdir(self):
         return os.path.join(self.path, ".clapp")
