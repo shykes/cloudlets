@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import sys
+import clapp
+import simplejson as json
+
+def main():
+    eval("cmd_%s" % sys.argv[1])(*sys.argv[2:])
+
+def cmd_config(image, user_args=None):
+    if user_args is None:
+        config = clapp.Image(image).config
+        if config != None:
+            print json.dumps(config, indent=1)
+    else:
+        config = {
+            "args"    : simplejson.loads(user_args),
+            "ip"      : {"interfaces": []},
+            "dns"       : {"nameservers": []}
+        }
+        print "Configuring image %s with:\n-------%s-------" % (image, json.dumps(config, indent=1))
+        clapp.Image(image).config = config
+
+def cmd_meta(image):
+    print json.dumps(clapp.Image(image).meta, indent=1)
+
+def cmd_schema(image):
+    print json.dumps(clapp.Image(image).config_schema, indent=1)
+
+
+if __name__ == "__main__":
+    main()

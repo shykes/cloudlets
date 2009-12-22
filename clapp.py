@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 from __future__ import with_statement
 
@@ -110,20 +109,3 @@ class Image(object):
         file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
 
     config = property(get_config, set_config)
-
-def main(args):
-    if len(args[1:]) < 2:
-        print "Usage: %s image_path json_config" % args[0]
-        return 1
-    image_path = args[1]
-    config = {
-            "args"    : simplejson.loads(args[2]),
-            "ip"      : {"interfaces": []},
-            "dns"       : {"nameservers": []}
-        }
-    print "Configuring image %s with %s" % (image_path, config)
-    Image(image_path).config = config
-
-if __name__ == "__main__":
-    import sys
-    sys.exit(main(sys.argv))
