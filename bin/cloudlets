@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import clapp
+import cloudlets
 import simplejson as json
 
 def main():
@@ -9,7 +9,7 @@ def main():
 
 def cmd_config(image, user_args=None):
     if user_args is None:
-        config = clapp.Image(image).config
+        config = cloudlets.Image(image).config
         if config != None:
             print json.dumps(config, indent=1)
     else:
@@ -19,28 +19,28 @@ def cmd_config(image, user_args=None):
             "dns"       : {"nameservers": []}
         }
         print "Configuring image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
-        clapp.Image(image).config = config
+        cloudlets.Image(image).config = config
 
 def cmd_meta(image):
-    print json.dumps(clapp.Image(image).meta, indent=1)
+    print json.dumps(cloudlets.Image(image).meta, indent=1)
 
 def cmd_metafile(image):
-    print clapp.Image(image).metafile
+    print cloudlets.Image(image).metafile
 
 def cmd_schema(image):
-    print json.dumps(clapp.Image(image).config_schema, indent=1)
+    print json.dumps(cloudlets.Image(image).config_schema, indent=1)
 
 def cmd_fs_ignore(image):
-    print "\n".join(clapp.Image(image).fs_ignore)
+    print "\n".join(cloudlets.Image(image).fs_ignore)
 
 def cmd_fs_persistent(image):
-    print "\n".join(clapp.Image(image).fs_persistent)
+    print "\n".join(cloudlets.Image(image).fs_persistent)
 
 def cmd_fs_templates(image):
-    print "\n".join(clapp.Image(image).fs_templates)
+    print "\n".join(cloudlets.Image(image).fs_templates)
 
 def cmd_find(image):
-    for path in clapp.Image(image).files:
+    for path in cloudlets.Image(image).files:
         print path
 
 if __name__ == "__main__":

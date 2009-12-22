@@ -1,3 +1,3 @@
-from clapp import Image
+from cloudlets import Image
 
 __all__ = [Image]

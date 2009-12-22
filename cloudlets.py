@@ -51,12 +51,12 @@ class Image(object):
         return list(self.get_files(exclude=self.meta.get("templates") + map(re.compile, self.meta.get("ignore")) + self.meta.get("persistent")))
     fs_other = property(get_fs_other)
 
-    def get_clappdir(self):
-        return os.path.join(self.path, ".clapp")
-    clappdir = property(get_clappdir)
+    def get_cloudletdir(self):
+        return os.path.join(self.path, ".cloudlet")
+    cloudletdir = property(get_cloudletdir)
 
     def get_metafile(self):
-        return os.path.join(self.clappdir, "meta")
+        return os.path.join(self.cloudletdir, "meta")
     metafile = property(get_metafile)
 
     def get_meta(self):
@@ -89,7 +89,7 @@ class Image(object):
         jsonschema.validate(config, self.config_schema)
 
     def get_config_file(self):
-        return os.path.join(self.clappdir, "applied_config")
+        return os.path.join(self.cloudletdir, "applied_config")
     config_file = property(get_config_file)
 
     def get_config(self):
