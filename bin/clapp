@@ -14,11 +14,11 @@ def cmd_config(image, user_args=None):
             print json.dumps(config, indent=1)
     else:
         config = {
-            "args"    : simplejson.loads(user_args),
+            "args"    : json.loads(user_args),
             "ip"      : {"interfaces": []},
             "dns"       : {"nameservers": []}
         }
-        print "Configuring image %s with:\n-------%s-------" % (image, json.dumps(config, indent=1))
+        print "Configuring image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
         clapp.Image(image).config = config
 
 def cmd_meta(image):
