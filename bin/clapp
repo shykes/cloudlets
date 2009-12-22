@@ -24,9 +24,20 @@ def cmd_config(image, user_args=None):
 def cmd_meta(image):
     print json.dumps(clapp.Image(image).meta, indent=1)
 
+def cmd_metafile(image):
+    print clapp.Image(image).metafile
+
 def cmd_schema(image):
     print json.dumps(clapp.Image(image).config_schema, indent=1)
 
+def cmd_fs_ignore(image):
+    print "\n".join(clapp.Image(image).fs_ignore)
+
+def cmd_fs_persistent(image):
+    print "\n".join(clapp.Image(image).fs_persistent)
+
+def cmd_fs_templates(image):
+    print "\n".join(clapp.Image(image).fs_templates)
 
 if __name__ == "__main__":
     main()
