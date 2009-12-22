@@ -19,7 +19,19 @@ For now clapp can only do one thing: configure an image in-place.
 If you want to keep an unconfigured master,
 it's up to you to create copies with rsync or aufs.
 
+
+
+1. Copy your image to keep an unconfigured copy
+
 # cp -R sample.clapp host1.clapp
-# python clapp.py host1.clapp '{"hostname": "host1"}'
+
+
+2. Configure the image
+
+# clapp config host1.clapp '{"args": {"hostname": "host1"}, "dns": {"nameservers": ["0.0.0.0"]}, "ip": {"interfaces": []}}'
+
+
+3. Your image is now a configured and bootable filesystem!
+
 # cat host1.clapp/etc/hostname
 
