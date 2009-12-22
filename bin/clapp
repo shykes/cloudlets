@@ -39,5 +39,9 @@ def cmd_fs_persistent(image):
 def cmd_fs_templates(image):
     print "\n".join(clapp.Image(image).fs_templates)
 
+def cmd_find(image):
+    for path in clapp.Image(image).files:
+        print path
+
 if __name__ == "__main__":
     main()

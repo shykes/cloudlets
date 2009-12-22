@@ -28,10 +28,9 @@ class Image(object):
 
     def get_files(self, include=[], exclude=[]):
         for (basepath, dpaths, fpaths) in os.walk(self.path, topdown=True):
-            if basepath == self.clappdir:
-                continue
+            chrooted_basepath = "/" if basepath == self.path else basepath.replace(self.path, "")
             for subpath in dpaths + fpaths:
-                path = os.path.join(basepath.replace(self.path, ""), subpath)
+                path = os.path.join(chrooted_basepath, subpath)
                 if filter_path(path, include, exclude):
                     yield path
     files = property(get_files)
