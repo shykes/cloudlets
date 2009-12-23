@@ -31,5 +31,15 @@ If you want to keep an unconfigured master, it's up to you to create copies with
 
 3. Your image is now a configured and bootable filesystem!
 
-# cat host1.cloudlet/etc/hostname
+# chroot host1.cloudlet
 
+
+Coming soon:
+------------
+
+ * Distributed versioning (fork and improve other people's images!)
+ * Multi-image stacks
+ * Automated tests (Cucumber tests for your stack!)
+ * VM generator
+
+And much more.
