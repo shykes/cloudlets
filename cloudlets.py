@@ -77,7 +77,7 @@ class Image(object):
         }
         return {
             "type": "object",
-            "items": dict([(key, {"type": "object", "items": section}) for (key, section) in schema_skeleton.items()])
+            "properties": dict([(key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items()])
         }
     config_schema = property(get_config_schema)
 
