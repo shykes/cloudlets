@@ -7,17 +7,13 @@ import simplejson as json
 def main():
     eval("cmd_%s" % sys.argv[1])(*sys.argv[2:])
 
-def cmd_config(image, user_args=None):
-    if user_args is None:
+def cmd_config(image, json_config=None):
+    if json_config is None:
         config = cloudlets.Image(image).config
         if config != None:
             print json.dumps(config, indent=1)
     else:
-        config = {
-            "args"    : json.loads(user_args),
-            "ip"      : {"interfaces": []},
-            "dns"       : {"nameservers": []}
-        }
+        config = json.loads(json_config)
         print "Configuring image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
         cloudlets.Image(image).config = config
 
