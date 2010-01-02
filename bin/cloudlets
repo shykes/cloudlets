@@ -7,6 +7,9 @@ import simplejson as json
 def main():
     eval("cmd_%s" % sys.argv[1])(*sys.argv[2:])
 
+def cmd_tar(image):
+    cloudlets.Image(image).tar()
+
 def cmd_config(image, json_config=None):
     if json_config is None:
         config = cloudlets.Image(image).config

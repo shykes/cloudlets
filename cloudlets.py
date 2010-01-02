@@ -3,6 +3,8 @@ from __future__ import with_statement
 
 import os
 import re
+import sys
+import tarfile
 import subprocess
 import tempfile
 import shutil
@@ -25,6 +27,11 @@ class Image(object):
 
     def __init__(self, path):
         self.path = os.path.abspath(path)
+
+    def tar(self):
+        tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
+        for path in self.get_files(exclude=map(re.compile, self.meta["ignore"])):
+            tar.add(self.path + path, path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
         for (basepath, dpaths, fpaths) in os.walk(self.path, topdown=True):
