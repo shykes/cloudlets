@@ -55,11 +55,13 @@ class Image(object):
         self.path = os.path.abspath(path)
 
     def tar(self):
+        """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
         for path in self.get_files(exclude=map(re.compile, self.manifest["ignore"])):
             tar.add(self.path + path, path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
+        """ Iterate over all paths in the image. Paths are "chrooted", ie. relative to the image with a prefix of "/" """
         for (basepath, dpaths, fpaths) in os.walk(self.path, topdown=True):
             chrooted_basepath = "/" if basepath == self.path else basepath.replace(self.path, "")
             for subpath in dpaths + fpaths:
@@ -69,36 +71,44 @@ class Image(object):
     files = property(get_files)
 
     def get_fs_templates(self):
+        """ Return a list of all paths in the image which are templates. Paths are chrooted. """
         return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("templates", [])))
     fs_templates = property(get_fs_templates)
 
     def get_fs_ignore(self):
+        """ Return a list of all paths in the image which should be ignored. Paths are chrooted. """
         return list(self.get_files(exclude=re.compile(".*"), include=map(re.compile, self.manifest.get("ignore", []))))
     fs_ignore = property(get_fs_ignore)
 
     def get_fs_persistent(self):
+        """ Return a list of all paths in the image which hold persistent data. Paths are chrooted. """
         return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("persistent", [])))
     fs_persistent = property(get_fs_persistent)
 
     def get_fs_other(self):
+        """ Return a list of all paths which are neither templates, persistent or to ignore. Paths are chrooted. """
         return list(self.get_files(exclude=self.manifest.get("templates") + map(re.compile, self.manifest.get("ignore")) + self.manifest.get("persistent")))
     fs_other = property(get_fs_other)
 
     def get_cloudletdir(self):
+        """ Return the path of the directory containing the image's metadata. """
         return os.path.join(self.path, ".cloudlet")
     cloudletdir = property(get_cloudletdir)
 
     def get_manifestfile(self):
+        """ Return the manifest file containing the image's metadata. """
         return os.path.join(self.cloudletdir, "manifest")
     manifestfile = property(get_manifestfile)
 
     def get_manifest(self):
+        """ Return a dictionary containing the image's metadata. """
         if os.path.exists(self.manifestfile):
             return Manifest(simplejson.loads(file(self.manifestfile).read()))
         return {}
     manifest = property(get_manifest)
 
     def get_config_schema(self):
+        """ Return the json schema which will be used to validate this image's configuration. """
         schema_skeleton =  {
             "dns": {
                 "nameservers": {"type": "array"}
@@ -115,22 +125,27 @@ class Image(object):
     config_schema = property(get_config_schema)
 
     def get_args_schema(self):
+        """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
         return self.manifest.get("args", {})
     args_schema = property(get_args_schema)
 
     def validate_config(self, config):
+        """ Validate a configuration against the image's json schema. The configuration is not applied. """
         jsonschema.validate(config, self.config_schema)
 
     def get_config_file(self):
+        """ Return the path to the file holding the currently applied configuration. If no configuration is applied, the file should not exist. """
         return os.path.join(self.cloudletdir, "applied_config")
     config_file = property(get_config_file)
 
     def get_config(self):
+        """ Return a dictionary holding the configuration currently applied on the image. If no config is applied, return None."""
         if not os.path.exists(self.config_file):
             return None
         return simplejson.loads(file(self.config_file).read())
 
     def set_config(self, config):
+        """ Apply a new configuration on the image. If a configuration is already in place, an exception will be raised. """
         if self.config:
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
