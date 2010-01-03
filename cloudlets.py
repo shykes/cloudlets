@@ -23,6 +23,32 @@ def filter_path(path, include, exclude):
         return any([f.match(path) if hasattr(f, "match") else f == path for f in filters])
     return match_filters(path, include) or not match_filters(path, exclude)
 
+
+class Manifest(dict):
+    """A dictionary holding an image's metadata"""
+
+    specs = {
+        "type": "object",
+        "properties": {
+            "name"          : {"optional": False, "type": "string", "description": "Canonical name of the image. example: org.dotcloud.debian-lenny-i386"},
+            "description"   : {"optional": True,  "type": "string", "description": "User-readable description of the image"},
+            "arch"          : {"optional": True,  "type": "string", "description": "Hardware architecture. example: i386"},
+            "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
+            "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
+            "persistent"    : {"optional": True,  "type": "array", "description": "List of files or directories holding persistent data", "default": []},
+            "ignore"        : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored"}
+        }
+    }
+
+    def validate(self):
+        """Validate contents of the manifest against the cloudlets spec"""
+        print "validating %s" % self
+        jsonschema.validate(dict(self), self.specs)
+
+    def __init__(self, *args, **kw):
+        dict.__init__(self, *args, **kw)
+        self.validate()
+
 class Image(object):
 
     def __init__(self, path):
@@ -68,7 +94,7 @@ class Image(object):
 
     def get_manifest(self):
         if os.path.exists(self.manifestfile):
-            return simplejson.loads(file(self.manifestfile).read())
+            return Manifest(simplejson.loads(file(self.manifestfile).read()))
         return {}
     manifest = property(get_manifest)
 
