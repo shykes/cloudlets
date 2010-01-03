@@ -42,7 +42,6 @@ class Manifest(dict):
 
     def validate(self):
         """Validate contents of the manifest against the cloudlets spec"""
-        print "validating %s" % self
         jsonschema.validate(dict(self), self.specs)
 
     def __init__(self, *args, **kw):
