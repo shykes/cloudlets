@@ -1,3 +1,3 @@
-from cloudlets import Image
+from cloudlets import Image, Manifest
 
-__all__ = [Image]
+__all__ = [Image, Manifest]
