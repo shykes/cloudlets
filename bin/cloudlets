@@ -25,11 +25,11 @@ def cmd_validate(image, json_config):
     print "Validating configuration for image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
     cloudlets.Image(image).validate_config(config)
 
-def cmd_meta(image):
-    print json.dumps(cloudlets.Image(image).meta, indent=1)
+def cmd_manifest(image):
+    print json.dumps(cloudlets.Image(image).manifest, indent=1)
 
-def cmd_metafile(image):
-    print cloudlets.Image(image).metafile
+def cmd_manifestfile(image):
+    print cloudlets.Image(image).manifestfile
 
 def cmd_schema(image):
     print json.dumps(cloudlets.Image(image).config_schema, indent=1)

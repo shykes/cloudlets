@@ -30,7 +30,7 @@ class Image(object):
 
     def tar(self):
         tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
-        for path in self.get_files(exclude=map(re.compile, self.meta["ignore"])):
+        for path in self.get_files(exclude=map(re.compile, self.manifest["ignore"])):
             tar.add(self.path + path, path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
@@ -43,34 +43,34 @@ class Image(object):
     files = property(get_files)
 
     def get_fs_templates(self):
-        return list(self.get_files(exclude=re.compile(".*"), include=self.meta.get("templates", [])))
+        return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("templates", [])))
     fs_templates = property(get_fs_templates)
 
     def get_fs_ignore(self):
-        return list(self.get_files(exclude=re.compile(".*"), include=map(re.compile, self.meta.get("ignore", []))))
+        return list(self.get_files(exclude=re.compile(".*"), include=map(re.compile, self.manifest.get("ignore", []))))
     fs_ignore = property(get_fs_ignore)
 
     def get_fs_persistent(self):
-        return list(self.get_files(exclude=re.compile(".*"), include=self.meta.get("persistent", [])))
+        return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("persistent", [])))
     fs_persistent = property(get_fs_persistent)
 
     def get_fs_other(self):
-        return list(self.get_files(exclude=self.meta.get("templates") + map(re.compile, self.meta.get("ignore")) + self.meta.get("persistent")))
+        return list(self.get_files(exclude=self.manifest.get("templates") + map(re.compile, self.manifest.get("ignore")) + self.manifest.get("persistent")))
     fs_other = property(get_fs_other)
 
     def get_cloudletdir(self):
         return os.path.join(self.path, ".cloudlet")
     cloudletdir = property(get_cloudletdir)
 
-    def get_metafile(self):
-        return os.path.join(self.cloudletdir, "meta")
-    metafile = property(get_metafile)
+    def get_manifestfile(self):
+        return os.path.join(self.cloudletdir, "manifest")
+    manifestfile = property(get_manifestfile)
 
-    def get_meta(self):
-        if os.path.exists(self.metafile):
-            return simplejson.loads(file(self.metafile).read())
+    def get_manifest(self):
+        if os.path.exists(self.manifestfile):
+            return simplejson.loads(file(self.manifestfile).read())
         return {}
-    meta = property(get_meta)
+    manifest = property(get_manifest)
 
     def get_config_schema(self):
         schema_skeleton =  {
@@ -89,7 +89,7 @@ class Image(object):
     config_schema = property(get_config_schema)
 
     def get_args_schema(self):
-        return self.meta.get("args", {})
+        return self.manifest.get("args", {})
     args_schema = property(get_args_schema)
 
     def validate_config(self, config):
@@ -109,7 +109,7 @@ class Image(object):
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
         self.validate_config(config)
-        for template in self.meta.get("templates", []):
+        for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.path + template).apply(self.path + template, config)
         file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
