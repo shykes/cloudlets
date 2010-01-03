@@ -5,12 +5,19 @@ import cloudlets
 import simplejson as json
 
 def main():
-    eval("cmd_%s" % sys.argv[1])(*sys.argv[2:])
+    commands = load_commands()
+    if len(sys.argv) < 2:
+        usage = "Usage: %s command [options]\n\nCommands:\n" + "\n".join([cmd.usage for cmd in commands.values()])
+        print usage % sys.argv[0]
+        sys.exit(1)
+    commands[sys.argv[1]](*sys.argv[2:])
 
 def cmd_tar(image):
+    """Wrap the image in an uncompressed tar archive and write it to stdout."""
     cloudlets.Image(image).tar()
 
 def cmd_config(image, json_config=None):
+    foo = "bar"
     if json_config is None:
         config = cloudlets.Image(image).config
         if config != None:
@@ -21,7 +28,7 @@ def cmd_config(image, json_config=None):
         cloudlets.Image(image).config = config
 
 def cmd_specs():
-    """ Output the specs for an image manifest, in jsonschema """
+    """Output the specs for an image manifest, in jsonschema."""
     print json.dumps(cloudlets.Manifest.specs, indent=1)
 
 def cmd_validate(image, json_config):
@@ -50,6 +57,13 @@ def cmd_fs_templates(image):
 def cmd_find(image):
     for path in cloudlets.Image(image).files:
         print path
+
+def load_commands(prefix="cmd_"):
+    cmds = dict([(name.replace(prefix, ""), obj) for (name, obj) in globals().items() if callable(obj) and name.startswith(prefix)])
+    for (name, obj) in cmds.items():
+        obj.args = obj.func_code.co_varnames[:obj.func_code.co_argcount]
+        obj.usage = "\t\t%-30.30s %s" % (name + " " + " ".join([arg.upper() for arg in obj.args]), obj.__doc__ or "")
+    return cmds
 
 if __name__ == "__main__":
     main()
