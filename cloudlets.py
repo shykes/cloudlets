@@ -69,25 +69,34 @@ class Image(object):
                     yield path
     files = property(get_files)
 
-    def get_fs_templates(self):
-        """ Return a list of all paths in the image which are templates. Paths are chrooted. """
-        return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("templates", [])))
-    fs_templates = property(get_fs_templates)
+    def chroot_path(self, path):
+        if os.path.normpath(path) == self.path:
+            return "/"
+        return path.replace(self.path, "")
 
-    def get_fs_ignore(self):
-        """ Return a list of all paths in the image which should be ignored. Paths are chrooted. """
-        return list(self.get_files(exclude=re.compile(".*"), include=map(re.compile, self.manifest.get("ignore", []))))
-    fs_ignore = property(get_fs_ignore)
+    def unchroot_path(self, path):
+        return os.path.join(self.path, re.sub("^/+", "", path))
 
-    def get_fs_persistent(self):
-        """ Return a list of all paths in the image which hold persistent data. Paths are chrooted. """
-        return list(self.get_files(exclude=re.compile(".*"), include=self.manifest.get("persistent", [])))
-    fs_persistent = property(get_fs_persistent)
-
-    def get_fs_other(self):
-        """ Return a list of all paths which are neither templates, persistent or to ignore. Paths are chrooted. """
-        return list(self.get_files(exclude=self.manifest.get("templates") + map(re.compile, self.manifest.get("ignore")) + self.manifest.get("persistent")))
-    fs_other = property(get_fs_other)
+    def find(self, templates=False, ignore=False, persistent=False, other=False):
+        include = []
+        exclude = []
+        if other:
+            include = re.compile(".*")
+            if not templates:
+                exclude += self.manifest.get("templates", [])
+            if not ignore:
+                exclude += self.manifest.get("ignore", [])
+            if not persistent:
+                exclude += self.manifest.get("persistent", [])
+        else:
+            exclude = re.compile(".*")
+            if templates:
+                include += self.manifest.get("templates", [])
+            if ignore:
+                include += map(re.compile, self.manifest.get("ignore", []))
+            if persistent:
+                include += self.manifest.get("persistent", [])
+        return self.get_files(include=include, exclude=exclude)
 
     def get_cloudletdir(self):
         """ Return the path of the directory containing the image's metadata. """

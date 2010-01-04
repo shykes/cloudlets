@@ -46,16 +46,19 @@ def cmd_schema(image):
     print json.dumps(cloudlets.Image(image).config_schema, indent=1)
 
 def cmd_fs_ignore(image):
-    print "\n".join(cloudlets.Image(image).fs_ignore)
+    for path in cloudlets.Image(image).find(ignore=True):
+        print path
 
 def cmd_fs_persistent(image):
-    print "\n".join(cloudlets.Image(image).fs_persistent)
+    for path in cloudlets.Image(image).find(persistent=True):
+        print path
 
 def cmd_fs_templates(image):
-    print "\n".join(cloudlets.Image(image).fs_templates)
+    for path in cloudlets.Image(image).find(templates=True):
+        print path
 
-def cmd_find(image):
-    for path in cloudlets.Image(image).files:
+def cmd_find(image, *args):
+    for path in cloudlets.Image(image).find(ignore=False, templates=True, persistent=True, other=True):
         print path
 
 def load_commands(prefix="cmd_"):
