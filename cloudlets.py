@@ -53,11 +53,11 @@ class Image(object):
     def __init__(self, path):
         self.path = os.path.abspath(path)
 
-    def tar(self):
+    def tar(self, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
-        for path in self.get_files(exclude=map(re.compile, self.manifest["volatile"])):
-            tar.add(self.chroot_path(path), path, recursive=False)
+        for path in self.find(*args, **kw):
+            tar.add(self.unchroot_path(path), path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
         """ Iterate over all paths in the image. Paths are "chrooted", ie. relative to the image with a prefix of "/" """

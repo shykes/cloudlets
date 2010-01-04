@@ -13,8 +13,8 @@ def main():
     commands[sys.argv[1]](*sys.argv[2:])
 
 def cmd_tar(image):
-    """Wrap the image in an uncompressed tar archive and write it to stdout."""
-    cloudlets.Image(image).tar()
+    """Wrap the image in an uncompressed tar archive and write it to stdout. Volatile files are ignored. """
+    cloudlets.Image(image).tar(volatile=False, templates=True, persistent=True, other=True)
 
 def cmd_config(image, json_config=None):
     foo = "bar"
