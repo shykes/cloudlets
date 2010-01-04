@@ -16,7 +16,7 @@
         "/var/log"
     ],
 
-    "ignore": [
+    "volatile": [
         "/etc/rc6.d/S00vzreboot$",
         "/var/log/(?!apt).+",
         "/var/log/apt/.+",

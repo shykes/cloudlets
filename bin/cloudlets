@@ -45,8 +45,8 @@ def cmd_manifestfile(image):
 def cmd_schema(image):
     print json.dumps(cloudlets.Image(image).config_schema, indent=1)
 
-def cmd_fs_ignore(image):
-    for path in cloudlets.Image(image).find(ignore=True):
+def cmd_fs_volatile(image):
+    for path in cloudlets.Image(image).find(volatile=True):
         print path
 
 def cmd_fs_persistent(image):
@@ -58,7 +58,7 @@ def cmd_fs_templates(image):
         print path
 
 def cmd_find(image, *args):
-    for path in cloudlets.Image(image).find(ignore=False, templates=True, persistent=True, other=True):
+    for path in cloudlets.Image(image).find(volatile=False, templates=True, persistent=True, other=True):
         print path
 
 def load_commands(prefix="cmd_"):

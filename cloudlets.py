@@ -36,7 +36,7 @@ class Manifest(dict):
             "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
             "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
             "persistent"    : {"optional": True,  "type": "array", "description": "List of files or directories holding persistent data", "default": []},
-            "ignore"        : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored"}
+            "volatile"      : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored"}
         }
     }
 
@@ -56,7 +56,7 @@ class Image(object):
     def tar(self):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
-        for path in self.get_files(exclude=map(re.compile, self.manifest["ignore"])):
+        for path in self.get_files(exclude=map(re.compile, self.manifest["volatile"])):
             tar.add(self.chroot_path(path), path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
@@ -76,23 +76,23 @@ class Image(object):
     def unchroot_path(self, path):
         return os.path.join(self.path, re.sub("^/+", "", path))
 
-    def find(self, templates=False, ignore=False, persistent=False, other=False):
+    def find(self, templates=False, volatile=False, persistent=False, other=False):
         include = []
         exclude = []
         if other:
             include = re.compile(".*")
             if not templates:
                 exclude += self.manifest.get("templates", [])
-            if not ignore:
-                exclude += self.manifest.get("ignore", [])
+            if not volatile:
+                exclude += self.manifest.get("volatile", [])
             if not persistent:
                 exclude += self.manifest.get("persistent", [])
         else:
             exclude = re.compile(".*")
             if templates:
                 include += self.manifest.get("templates", [])
-            if ignore:
-                include += map(re.compile, self.manifest.get("ignore", []))
+            if volatile:
+                include += map(re.compile, self.manifest.get("volatile", []))
             if persistent:
                 include += self.manifest.get("persistent", [])
         return self.get_files(include=include, exclude=exclude)
