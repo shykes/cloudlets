@@ -159,7 +159,7 @@ class Image(object):
         self.validate_config(config)
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
-            EJSTemplate(self.path + template).apply(self.path + template, config)
+            EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
         file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
 
     config = property(get_config, set_config)
