@@ -57,14 +57,13 @@ class Image(object):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
         for path in self.get_files(exclude=map(re.compile, self.manifest["ignore"])):
-            tar.add(self.path + path, path, recursive=False)
+            tar.add(self.chroot_path(path), path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
         """ Iterate over all paths in the image. Paths are "chrooted", ie. relative to the image with a prefix of "/" """
         for (basepath, dpaths, fpaths) in os.walk(self.path, topdown=True):
-            chrooted_basepath = "/" if basepath == self.path else basepath.replace(self.path, "")
             for subpath in dpaths + fpaths:
-                path = os.path.join(chrooted_basepath, subpath)
+                path = os.path.join(self.chroot_path(basepath), subpath)
                 if filter_path(path, include, exclude):
                     yield path
     files = property(get_files)
