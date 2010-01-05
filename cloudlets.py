@@ -6,7 +6,7 @@ import re
 import sys
 import tarfile
 import subprocess
-import tempfile
+from tempfile import mkdtemp, mktemp
 import shutil
 import simplejson as simplejson
 
@@ -53,11 +53,32 @@ class Image(object):
     def __init__(self, path):
         self.path = os.path.abspath(path)
 
-    def tar(self, *args, **kw):
+    def copy(self, dest=None, *args, **kw):
+        """ Copy the image to a new directory at <dest>. If dest is None, a temporary directory is created. <dest> is returned. All options are passed to Image.tar() for lossless transfer. """
+        if dest is None:
+            dest = mkdtemp()
+        tmptar = file(mktemp(), "wb")
+        self.tar(out=tmptar, *args, **kw)
+        tmptar.close()
+        tarfile.open(tmptar.name, "r").extractall(dest)
+        return dest
+
+    def tar(self, out=sys.stdout, config=None, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
-        tar = tarfile.open("", mode="w|", fileobj=sys.stdout)
+        if config is not None:
+            self.validate_config(config)
+            templates_dir = self.copy(templates=True)
+            for template in self.find(templates=True):
+                EJSTemplate(templates_dir + template).apply(templates_dir + template, config)
+        tar = tarfile.open("", mode="w|", fileobj=out)
+        templates = self.manifest.get("templates")
         for path in self.find(*args, **kw):
-            tar.add(self.unchroot_path(path), path, recursive=False)
+            if config and path in templates:
+                real_path = templates_dir + path
+                EJSTemplate(real_path).apply(real_path, config)
+            else:
+                real_path = self.unchroot_path(path)
+            tar.add(real_path, path, recursive=False)
 
     def get_files(self, include=[], exclude=[]):
         """ Iterate over all paths in the image. Paths are "chrooted", ie. relative to the image with a prefix of "/" """
