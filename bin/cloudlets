@@ -24,11 +24,12 @@ def main():
         sys.exit(1)
 
 @cli.command
-def cmd_tar(image, config=None):
+def tar(image, config=None):
     """Wrap the image in an uncompressed tar archive and write it to stdout. Volatile files are ignored. """
     cloudlets.Image(image).tar(volatile=False, templates=True, persistent=True, other=True, config=config and json.loads(config))
 
-def cmd_config(image, json_config=None):
+@cli.command
+def config(image, json_config=None):
     if json_config is None:
         config = cloudlets.Image(image).config
         if config != None:
