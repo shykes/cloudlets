@@ -101,11 +101,10 @@ class Image(object):
         include = []
         exclude = []
         if other:
-            include = re.compile(".*")
             if not templates:
                 exclude += self.manifest.get("templates", [])
             if not volatile:
-                exclude += self.manifest.get("volatile", [])
+                exclude += map(re.compile, self.manifest.get("volatile", []))
             if not persistent:
                 exclude += self.manifest.get("persistent", [])
         else:
