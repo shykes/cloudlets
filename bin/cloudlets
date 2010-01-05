@@ -8,7 +8,7 @@ from cloudlets import cli
 
 def main():
     commands = cli.load(globals())
-    usage = "Usage: %s command [options]\n\nCommands:\n" + "\n".join(["\t" + cmd.usage.replace("\n", "\n\t") + "\t" for cmd in sorted(commands.values())])
+    usage = "Usage: %s command [options]\n\nCommands:\n" + "\n".join(["\t" + cmd.usage.replace("\n", "\n\t") + "\t" for cmd in sorted(commands.values(), cmp=lambda x,y: cmp(x.name, y.name))])
     if len(sys.argv) < 2:
         print usage % sys.argv[0]
         sys.exit(1)
