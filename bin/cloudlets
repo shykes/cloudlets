@@ -14,7 +14,7 @@ def main():
 
 def cmd_tar(image, config=None):
     """Wrap the image in an uncompressed tar archive and write it to stdout. Volatile files are ignored. """
-    cloudlets.Image(image).tar(volatile=False, templates=True, persistent=True, other=True, config=json.loads(config))
+    cloudlets.Image(image).tar(volatile=False, templates=True, persistent=True, other=True, config=config and json.loads(config))
 
 def cmd_config(image, json_config=None):
     foo = "bar"
