@@ -79,6 +79,7 @@ class Image(object):
             else:
                 real_path = self.unchroot_path(path)
             tar.add(real_path, path, recursive=False)
+        tar.close()
 
     def get_files(self, include=[], exclude=[]):
         """ Iterate over all paths in the image. Paths are "chrooted", ie. relative to the image with a prefix of "/" """
