@@ -51,7 +51,7 @@ def specs():
 def validate(image, json_config=None):
     config = json.loads(json_config)
     print "Validating configuration for image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
-    cloudlets.Image(image).validate_config(config)
+    cloudlets.Image(image).manifest.validate_config(config)
 
 @cli.command(
     image="Path to a cloudlet image"
@@ -65,7 +65,7 @@ def manifestfile(image):
 
 @cli.command
 def schema(image):
-    print json.dumps(cloudlets.Image(image).config_schema, indent=1)
+    print json.dumps(cloudlets.Image(image).manifest.config_schema, indent=1)
 
 @cli.command
 def fs_volatile(image):

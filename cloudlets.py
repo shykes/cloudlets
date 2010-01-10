@@ -40,6 +40,32 @@ class Manifest(dict):
         }
     }
 
+    def get_args_schema(self):
+        """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
+        return self.get("args", {})
+    args_schema = property(get_args_schema)
+
+    def get_config_schema(self):
+        """ Return the json schema which will be used to validate this image's configuration. """
+        schema_skeleton =  {
+            "dns": {
+                "nameservers": {"type": "array"}
+            },
+            "ip": {
+                "interfaces": {"type": "array"}
+            },
+            "args": self.args_schema
+        }
+        return {
+            "type": "object",
+            "properties": dict([(key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items()])
+        }
+    config_schema = property(get_config_schema)
+
+    def validate_config(self, config):
+        """ Validate a configuration against the image's json schema. The configuration is not applied. """
+        jsonschema.validate(config, self.config_schema)
+
     def validate(self):
         """Validate contents of the manifest against the cloudlets spec"""
         jsonschema.validate(dict(self), self.specs)
@@ -66,7 +92,7 @@ class Image(object):
     def tar(self, out=sys.stdout, config=None, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         if config is not None:
-            self.validate_config(config)
+            self.manifest.validate_config(config)
             templates_dir = self.copy(templates=True)
             for template in self.find(templates=True):
                 EJSTemplate(templates_dir + template).apply(templates_dir + template, config)
@@ -135,32 +161,6 @@ class Image(object):
         return {}
     manifest = property(get_manifest)
 
-    def get_config_schema(self):
-        """ Return the json schema which will be used to validate this image's configuration. """
-        schema_skeleton =  {
-            "dns": {
-                "nameservers": {"type": "array"}
-            },
-            "ip": {
-                "interfaces": {"type": "array"}
-            },
-            "args": self.args_schema
-        }
-        return {
-            "type": "object",
-            "properties": dict([(key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items()])
-        }
-    config_schema = property(get_config_schema)
-
-    def get_args_schema(self):
-        """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
-        return self.manifest.get("args", {})
-    args_schema = property(get_args_schema)
-
-    def validate_config(self, config):
-        """ Validate a configuration against the image's json schema. The configuration is not applied. """
-        jsonschema.validate(config, self.config_schema)
-
     def get_config_file(self):
         """ Return the path to the file holding the currently applied configuration. If no configuration is applied, the file should not exist. """
         return os.path.join(self.cloudletdir, "applied_config")
@@ -177,7 +177,7 @@ class Image(object):
         if self.config:
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
-        self.validate_config(config)
+        self.manifest.validate_config(config)
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
