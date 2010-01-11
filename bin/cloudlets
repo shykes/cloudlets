@@ -1,90 +1,67 @@
 #!/usr/bin/env python
 
 import sys
+import argparse
 import cloudlets
 import simplejson as json
 
-from cloudlets import cli
+parser = argparse.ArgumentParser(description="Manipulate server images in the cloudlets format.")
+subcommands = parser.add_subparsers(dest="command")
 
 def main():
-    commands = cli.load(globals())
-    usage = "Usage: %s command [options]\n\nCommands:\n" + "\n".join(["\t" + cmd.usage.replace("\n", "\n\t") + "\t" for cmd in sorted(commands.values(), cmp=lambda x,y: cmp(x.name, y.name))])
-    if len(sys.argv) < 2:
-        print usage % sys.argv[0]
-        sys.exit(1)
-    (cmd, args) = (sys.argv[1], sys.argv[2:])
-    if cmd not in commands:
-        print "%s: not such command" % cmd
-        print usage % sys.argv[0]     
-        sys.exit(1)
-    try:
-        commands[sys.argv[1]](*sys.argv[2:])
-    except cli.CLIException, e:
-        print "Usage: %s %s" % (sys.argv[0], e)
-        sys.exit(1)
+    args = parser.parse_args()
+    cmd = globals()["cmd_" + args.command]
+    cmd(args)
 
-@cli.command
-def tar(image, config=None):
-    """Wrap the image in an uncompressed tar archive and write it to stdout. Volatile files are ignored. """
-    cloudlets.Image(image).tar(volatile=False, templates=True, persistent=True, other=True, config=config and json.loads(config))
+parser_tar = subcommands.add_parser("tar", help="Wrap the image in an uncompressed tar archive and write it to stdout")
+parser_tar.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_tar.add_argument("--config", metavar="JSON_CONFIG", help="Configure the output, leaving the source untouched", default=None)
+def cmd_tar(args):
+    cloudlets.Image(args.image).tar(volatile=False, templates=True, persistent=True, other=True, config=args.config and json.loads(args.config))
 
-@cli.command
-def config(image, json_config=None):
-    if json_config is None:
-        config = cloudlets.Image(image).config
+
+parser_config = subcommands.add_parser("config", help="Configure an image in-place. If no configuration is given, show current configuration")
+parser_config.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_config.add_argument("--config", metavar="JSON_CONFIG", help="Apply JSON_CONFIG to the image", default=None)
+def cmd_config(args):
+    if args.config is None:
+        config = cloudlets.Image(args.image).config
         if config != None:
             print json.dumps(config, indent=1)
     else:
-        config = json.loads(json_config)
-        print "Configuring image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
-        cloudlets.Image(image).config = config
+        config = json.loads(args.config)
+        print "Configuring image %s with:\n-------\n%s\n-------" % (args.image, json.dumps(config, indent=1))
+        cloudlets.Image(args.image).config = config
 
-@cli.command
-def specs():
-    """Output the specs for an image manifest, in jsonschema."""
+parser_specs = subcommands.add_parser("specs", help="Output the specs for an image manifest, in jsonschema")
+def cmd_specs(args):
     print json.dumps(cloudlets.Manifest.specs, indent=1)
 
-@cli.command(
-    image="Path to a cloudlet image",
-    json_config="JSON-encoded configuration",
-)
-def validate(image, json_config=None):
-    config = json.loads(json_config)
+parser_validate = subcommands.add_parser("validate", help="Validate a configuration for an image")
+parser_validate.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_validate.add_argument("--config", metavar="JSON_CONFIG", help="Apply JSON_CONFIG to the image", default=None)
+def cmd_validate(args):
+    config = json.loads(args.config)
     print "Validating configuration for image %s with:\n-------\n%s\n-------" % (image, json.dumps(config, indent=1))
-    cloudlets.Image(image).manifest.validate_config(config)
+    cloudlets.Image(args.image).manifest.validate_config(config)
 
-@cli.command(
-    image="Path to a cloudlet image"
-)
-def manifest(image):
-    print json.dumps(cloudlets.Image(image).manifest, indent=1)
+parser_manifest = subcommands.add_parser("manifest", help="Display an image's manifest")
+parser_manifest.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+def cmd_manifest(args):
+    print json.dumps(cloudlets.Image(args.image).manifest, indent=1)
 
-@cli.command
-def manifestfile(image):
-    print cloudlets.Image(image).manifestfile
+parser_schema = subcommands.add_parser("schema", help="Display an image's configuration schema")
+parser_schema.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+def cmd_schema(args):
+    print json.dumps(cloudlets.Image(args.image).manifest.config_schema, indent=1)
 
-@cli.command
-def schema(image):
-    print json.dumps(cloudlets.Image(image).manifest.config_schema, indent=1)
 
-@cli.command
-def fs_volatile(image):
-    for path in cloudlets.Image(image).find(volatile=True):
-        print path
-
-@cli.command
-def fs_persistent(image):
-    for path in cloudlets.Image(image).find(persistent=True):
-        print path
-
-@cli.command
-def fs_templates(image):
-    for path in cloudlets.Image(image).find(templates=True):
-        print path
-
-@cli.command
-def find(image):
-    for path in cloudlets.Image(image).find(volatile=False, templates=True, persistent=True, other=True):
+parser_find = subcommands.add_parser("find", help="List the contents of an image, with optional filtering")
+parser_find.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_find.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
+def cmd_find(args):
+    filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
+    for path in cloudlets.Image(args.image).find(**filters):
         print path
 
 if __name__ == "__main__":

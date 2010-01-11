@@ -158,7 +158,7 @@ class Image(object):
         """ Return a dictionary containing the image's metadata. """
         if os.path.exists(self.manifestfile):
             return Manifest(simplejson.loads(file(self.manifestfile).read()))
-        return {}
+        return Manifest({})
     manifest = property(get_manifest)
 
     def get_config_file(self):

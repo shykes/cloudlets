@@ -4,7 +4,7 @@ from setuptools import setup
 setup(name='cloudlets',
       version='0.0.1',
       author='Solomon Hykes',
-      install_requires=['simplejson >= 2.0.9', 'jsonschema', 'ejs >= 0.0.1'],
+      install_requires=['simplejson >= 2.0.9', 'jsonschema', 'ejs >= 0.0.1', 'argparse'],
       package_dir = {'cloudlets' : '.'},
       packages=['cloudlets'],
       scripts=['bin/cloudlets'],
