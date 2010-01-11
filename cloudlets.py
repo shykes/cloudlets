@@ -77,6 +77,8 @@ class Manifest(dict):
 class Image(object):
 
     def __init__(self, path):
+        if not os.path.isdir(path):
+            raise ValueError("%s doesn't exist or is not a directory" % path)
         self.path = os.path.abspath(path)
 
     def copy(self, dest=None, *args, **kw):
