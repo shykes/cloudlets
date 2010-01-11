@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import tarfile
+import metashelf
+import mercurial.hg, mercurial.ui, mercurial.error
 import subprocess
 from tempfile import mkdtemp, mktemp
 import shutil
@@ -184,5 +186,30 @@ class Image(object):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
         file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
+
+    def hg(self, *cmd):
+        """ Run a mercurial command, using the image as a repository """
+        hgrc_path = os.path.join(self.path, ".hg", "hgrc")
+        hgignore_path = os.path.join(self.path, ".hgignore")
+        if os.path.exists(hgrc_path):
+            os.unlink(hgrc_path)
+        if os.path.exists(hgignore_path):
+            os.unlink(hgignore_path)
+        try:
+            repo = mercurial.hg.repository(mercurial.ui.ui(), path=self.path, create=False)
+        except mercurial.error.RepoError:
+            repo = mercurial.hg.repository(mercurial.ui.ui(), path=self.path, create=True)
+        ignore = ["^.hgignore$"] + [p for p in self.manifest.get("volatile", [])]
+        print "Writing new .hgignore:\n----\n%s\n----" % "\n".join(ignore)
+        file(hgignore_path, "w").write("\n".join(ignore))
+        hgrc = """[hooks]
+pre-commit.metashelf = python:metashelf.hg.hook_remember
+pre-status.metashelf = python:metashelf.hg.hook_remember
+pre-diff.metashelf = python:metashelf.hg.hook_remember
+post-update.metashelf = python:metashelf.hg.hook_restore
+        """
+        print "Writing new .hgrc:\n-----\n%s\n------\n" % hgrc
+        file(hgrc_path, "w").write(hgrc)
+        subprocess.call(("hg", "-R", self.path) + cmd)
 
     config = property(get_config, set_config)

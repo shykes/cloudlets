@@ -66,5 +66,11 @@ def cmd_find(args):
     for path in cloudlets.Image(args.image).find(**filters):
         print path
 
+parser_hg = subcommands.add_parser("hg", help="Run a mercurial command on an image")
+parser_hg.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_hg.add_argument("hg_command", nargs="+", help="mercurial command")
+def cmd_hg(args):
+    cloudlets.Image(args.image).hg(*args.hg_command)
+
 if __name__ == "__main__":
     main()
