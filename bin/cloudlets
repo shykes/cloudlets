@@ -16,9 +16,11 @@ def main():
 parser_tar = subcommands.add_parser("tar", help="Wrap the image in an uncompressed tar archive and write it to stdout")
 parser_tar.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 parser_tar.add_argument("--config", metavar="JSON_CONFIG", help="Configure the output, leaving the source untouched", default=None)
+parser_tar.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
 def cmd_tar(args):
-    cloudlets.Image(args.image).tar(volatile=False, templates=True, persistent=True, other=True, config=args.config and json.loads(args.config))
-
+    filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
+    config = args.config and json.loads(args.config) or None
+    cloudlets.Image(args.image).tar(config=config, **filters)
 
 parser_config = subcommands.add_parser("config", help="Configure an image in-place. If no configuration is given, show current configuration")
 parser_config.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
