@@ -200,7 +200,6 @@ class Image(object):
         except mercurial.error.RepoError:
             repo = mercurial.hg.repository(mercurial.ui.ui(), path=self.path, create=True)
         ignore = ["^.hgignore$"] + [re.sub("^/", "^", p) for p in self.manifest.get("volatile", [])]
-        print "Writing new .hgignore:\n----\n%s\n----" % "\n".join(ignore)
         file(hgignore_path, "w").write("\n".join(ignore))
         hgrc = """[hooks]
 pre-commit.metashelf = python:metashelf.hg.hook_remember
@@ -208,7 +207,6 @@ pre-status.metashelf = python:metashelf.hg.hook_remember
 pre-diff.metashelf = python:metashelf.hg.hook_remember
 post-update.metashelf = python:metashelf.hg.hook_restore
         """
-        print "Writing new .hgrc:\n-----\n%s\n------\n" % hgrc
         file(hgrc_path, "w").write(hgrc)
         subprocess.call(("hg", "-R", self.path) + cmd)
 
