@@ -12,26 +12,46 @@ Cloudlets are universal server images for the cloud.
 They're lightweight, version-controlled, and you can export them to any bootable format known to man: Xen, KVM, Amazon EC2, or just a plain bootable CD.
 
 
-Example:
---------
+Installing:
+-----------
 
-For now you can only configure cloudlet images in-place.
-If you want to keep an unconfigured master, it's up to you to create copies with rsync or aufs.
+1. One of our dependencies (python-spidermonkey) requires the following system packages to be installed:
 
+    On Ubuntu/debian:
+    # apt-get install pkg-config build-essential python-dev libspr4-dev
 
-1. Copy your image to keep an unconfigured copy
+2. Run the install script
 
-# cp -R sample.cloudlet host1.cloudlet
-
-
-2. Configure the image
-
-# cloudlets config host1.cloudlet '{"args": {"hostname": "host1"}, "dns": {"nameservers": ["0.0.0.0"]}, "ip": {"interfaces": []}}'
+    # python setup.pt install
 
 
-3. Your image is now a configured and bootable filesystem!
+Examples:
+---------
 
-# chroot host1.cloudlet
+# cloudlets find sample.cloudlet
+
+    List the contents of an image
+
+# cloudlets find sample.cloudlet --only templates volatile
+
+    List only template and volatile files in an image
+
+# cloudlets manifest sample.cloudlet
+
+    Display an image's manifest
+
+# cloudlets tar sample.cloudlet --config '{"args": {"hostname": "host1"}, "dns": {"nameservers": ["0.0.0.0"]}, "ip": {"interfaces": []}}' | tar tv
+
+    Generate a tar archive from an image, configuring it on the fly with the given JSON configuration.
+    The tarball can be piped into vm2vm [1] to generate an EC2 image, for example.
+
+[1] http://bitbucket.org/dotcloud/vm2vm
+
+# touch sample.cloudlet/etc/foo
+# cloudlets hg sample.cloudlet add
+# cloudlets hg sample.cloudlet commit -u "Solomon Hykes <solomon.hykes@dotcloud.com>" -m "Added configuration file foo"
+
+    Make a change to an image, then commit it using Mercurial.
 
 
 Coming soon:
