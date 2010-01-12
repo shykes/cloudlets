@@ -1,4 +1,4 @@
-cloudlets v.0.0.1
+cloudlets v.0.0.2
 
 Author: Solomon Hykes <solomon.hykes@dotcloud.com>
 License : see LICENSE file.
