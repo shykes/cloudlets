@@ -199,7 +199,7 @@ class Image(object):
             repo = mercurial.hg.repository(mercurial.ui.ui(), path=self.path, create=False)
         except mercurial.error.RepoError:
             repo = mercurial.hg.repository(mercurial.ui.ui(), path=self.path, create=True)
-        ignore = ["^.hgignore$"] + [p for p in self.manifest.get("volatile", [])]
+        ignore = ["^.hgignore$"] + [re.sub("^/", "^", p) for p in self.manifest.get("volatile", [])]
         print "Writing new .hgignore:\n----\n%s\n----" % "\n".join(ignore)
         file(hgignore_path, "w").write("\n".join(ignore))
         hgrc = """[hooks]
