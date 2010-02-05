@@ -32,8 +32,6 @@ class Manifest(dict):
     specs = {
         "type": "object",
         "properties": {
-            "name"          : {"optional": False, "type": "string", "description": "Canonical name of the image. example: org.dotcloud.debian-lenny-i386"},
-            "description"   : {"optional": True,  "type": "string", "description": "User-readable description of the image"},
             "arch"          : {"optional": True,  "type": "string", "description": "Hardware architecture. example: i386"},
             "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
             "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
