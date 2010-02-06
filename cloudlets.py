@@ -10,8 +10,8 @@ from tempfile import mkdtemp, mktemp
 import js
 import metashelf
 import jsonschema
+import simplejson as json
 from ejs import EJSTemplate
-import simplejson as simplejson
 import mercurial.hg, mercurial.ui, mercurial.error
 
 def filter_path(path, include, exclude):
@@ -164,7 +164,7 @@ class Image(object):
     def get_manifest(self):
         """ Return a dictionary containing the image's metadata. """
         if os.path.exists(self.manifestfile):
-            return Manifest(simplejson.loads(file(self.manifestfile).read()))
+            return Manifest(json.loads(file(self.manifestfile).read()))
         return Manifest({})
     manifest = property(get_manifest)
 
@@ -177,7 +177,7 @@ class Image(object):
         """ Return a dictionary holding the configuration currently applied on the image. If no config is applied, return None."""
         if not os.path.exists(self.config_file):
             return None
-        return simplejson.loads(file(self.config_file).read())
+        return json.loads(file(self.config_file).read())
 
     def set_config(self, config):
         """ Apply a new configuration on the image. If a configuration is already in place, an exception will be raised. """
@@ -189,7 +189,7 @@ class Image(object):
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
-        file(self.config_file, "w").write(simplejson.dumps(config, indent=1))
+        file(self.config_file, "w").write(json.dumps(config, indent=1))
 
     def hg(self, *cmd):
         """ Run a mercurial command, using the image as a repository """
