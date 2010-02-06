@@ -6,6 +6,7 @@ import cloudlets
 import simplejson as json
 
 parser = argparse.ArgumentParser(description="Manipulate server images in the cloudlets format.")
+parser.add_argument("--manifest", help="Manifest file", default=None)
 subcommands = parser.add_subparsers(dest="command")
 
 def main():
@@ -20,20 +21,20 @@ parser_tar.add_argument("--only", nargs="+", choices=["templates","volatile","pe
 def cmd_tar(args):
     filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
     config = args.config and json.loads(args.config) or None
-    cloudlets.Image(args.image).tar(config=config, **filters)
+    cloudlets.Image(args.image, args.manifest).tar(config=config, **filters)
 
 parser_config = subcommands.add_parser("config", help="Configure an image in-place. If no configuration is given, show current configuration")
 parser_config.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 parser_config.add_argument("--config", metavar="JSON_CONFIG", help="Apply JSON_CONFIG to the image", default=None)
 def cmd_config(args):
     if args.config is None:
-        config = cloudlets.Image(args.image).config
+        config = cloudlets.Image(args.image, args.manifest).config
         if config != None:
             print json.dumps(config, indent=1)
     else:
         config = json.loads(args.config)
         print "Configuring image %s with:\n-------\n%s\n-------" % (args.image, json.dumps(config, indent=1))
-        cloudlets.Image(args.image).config = config
+        cloudlets.Image(args.image, args.manifest).config = config
 
 parser_specs = subcommands.add_parser("specs", help="Output the specs for an image manifest, in jsonschema")
 def cmd_specs(args):
@@ -45,19 +46,19 @@ parser_validate.add_argument("--config", metavar="JSON_CONFIG", help="Apply JSON
 def cmd_validate(args):
     config = json.loads(args.config)
     print "Validating configuration for image %s with:\n-------\n%s\n-------" % (args.image, json.dumps(config, indent=1))
-    image = cloudlets.Image(args.image)
+    image = cloudlets.Image(args.image, args.manifest)
     image.set_config_defaults(config)
     image.manifest.validate_config(config)
 
 parser_manifest = subcommands.add_parser("manifest", help="Display an image's manifest")
 parser_manifest.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 def cmd_manifest(args):
-    print json.dumps(cloudlets.Image(args.image).manifest, indent=1)
+    print json.dumps(cloudlets.Image(args.image, args.manifest).manifest, indent=1)
 
 parser_schema = subcommands.add_parser("schema", help="Display an image's configuration schema")
 parser_schema.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 def cmd_schema(args):
-    print json.dumps(cloudlets.Image(args.image).manifest.config_schema, indent=1)
+    print json.dumps(cloudlets.Image(args.image, args.manifest).manifest.config_schema, indent=1)
 
 
 parser_find = subcommands.add_parser("find", help="List the contents of an image, with optional filtering")
@@ -65,14 +66,14 @@ parser_find.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet
 parser_find.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
 def cmd_find(args):
     filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
-    for path in cloudlets.Image(args.image).find(**filters):
+    for path in cloudlets.Image(args.image, args.manifest).find(**filters):
         print path
 
 parser_hg = subcommands.add_parser("hg", help="Run a mercurial command on an image")
 parser_hg.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 parser_hg.add_argument("hg_command", nargs="+", help="mercurial command")
 def cmd_hg(args):
-    cloudlets.Image(args.image).hg(*args.hg_command)
+    cloudlets.Image(args.image, args.manifest).hg(*args.hg_command)
 
 if __name__ == "__main__":
     main()

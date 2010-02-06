@@ -73,10 +73,11 @@ class Manifest(dict):
 
 class Image(object):
 
-    def __init__(self, path):
+    def __init__(self, path, manifest=None):
         if not os.path.isdir(path):
             raise ValueError("%s doesn't exist or is not a directory" % path)
         self.path = os.path.abspath(path)
+        self.__manifest_file = manifest
 
     def set_config_defaults(self, config):
         for name, schema in self.manifest['args'].items():
@@ -158,7 +159,9 @@ class Image(object):
 
     def get_manifestfile(self):
         """ Return the manifest file containing the image's metadata. """
-        return os.path.join(self.cloudletdir, "manifest")
+        if self.__manifest_file is None:
+            return os.path.join(self.cloudletdir, "manifest")
+        return self.__manifest_file
     manifestfile = property(get_manifestfile)
 
     def get_manifest(self):
