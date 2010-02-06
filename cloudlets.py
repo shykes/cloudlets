@@ -55,7 +55,7 @@ class Manifest(dict):
         }
         return {
             "type": "object",
-            "properties": dict([(key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items()])
+            "properties": dict((key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items())
         }
     config_schema = property(get_config_schema)
 
@@ -78,6 +78,12 @@ class Image(object):
             raise ValueError("%s doesn't exist or is not a directory" % path)
         self.path = os.path.abspath(path)
 
+    def set_config_defaults(self, config):
+        for name, schema in self.manifest['args'].items():
+            if 'default' in schema and name not in config['args']:
+                config['args'][name] = schema['default']
+        return config
+
     def copy(self, dest=None, *args, **kw):
         """ Copy the image to a new directory at <dest>. If dest is None, a temporary directory is created. <dest> is returned. All options are passed to Image.tar() for lossless transfer. """
         if dest is None:
@@ -91,6 +97,7 @@ class Image(object):
     def tar(self, out=sys.stdout, config=None, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         if config is not None:
+            self.set_config_defaults(config)
             self.manifest.validate_config(config)
             templates_dir = self.copy(templates=True)
             for template in self.find(templates=True):
@@ -176,6 +183,7 @@ class Image(object):
         if self.config:
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
+        self.set_config_defaults(config)
         self.manifest.validate_config(config)
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
