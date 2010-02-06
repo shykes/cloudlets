@@ -1,20 +1,18 @@
 
-from __future__ import with_statement
-
 import os
 import re
 import sys
+import shutil
 import tarfile
-import metashelf
-import mercurial.hg, mercurial.ui, mercurial.error
 import subprocess
 from tempfile import mkdtemp, mktemp
-import shutil
-import simplejson as simplejson
 
 import js
+import metashelf
 import jsonschema
 from ejs import EJSTemplate
+import simplejson as simplejson
+import mercurial.hg, mercurial.ui, mercurial.error
 
 def filter_path(path, include, exclude):
     if not hasattr(include, "__iter__"):
@@ -24,7 +22,6 @@ def filter_path(path, include, exclude):
     def match_filters(path, filters):
         return any([f.match(path) if hasattr(f, "match") else f == path for f in filters])
     return match_filters(path, include) or not match_filters(path, exclude)
-
 
 class Manifest(dict):
     """A dictionary holding an image's metadata"""
