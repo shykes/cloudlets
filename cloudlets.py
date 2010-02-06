@@ -9,6 +9,7 @@ from tempfile import mkdtemp, mktemp
 
 import js
 import metashelf
+import vm2vm.raw
 import jsonschema
 import simplejson as json
 from ejs import EJSTemplate
@@ -80,10 +81,18 @@ class Image(object):
         self.__manifest_file = manifest
 
     def set_config_defaults(self, config):
+        """ Fill the given config with the defaults from the manifest if missing """
         for name, schema in self.manifest['args'].items():
             if 'default' in schema and name not in config['args']:
                 config['args'][name] = schema['default']
         return config
+
+    def raw(self, out, config, size, **filters):
+        """ Create a raw image of the cloudlet """
+        with vm2vm.raw.RawImage(out, "w") as img:
+            img.mkfs(size)
+            with vm2vm.raw.Mountpoint(img.name) as mnt:
+                self.copy(dest=mnt, config=config, **filters)
 
     def copy(self, dest=None, *args, **kw):
         """ Copy the image to a new directory at <dest>. If dest is None, a temporary directory is created. <dest> is returned. All options are passed to Image.tar() for lossless transfer. """

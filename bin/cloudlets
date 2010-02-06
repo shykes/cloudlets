@@ -19,9 +19,20 @@ parser_tar.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet 
 parser_tar.add_argument("--config", metavar="JSON_CONFIG", help="Configure the output, leaving the source untouched", default=None)
 parser_tar.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
 def cmd_tar(args):
-    filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
-    config = args.config and json.loads(args.config) or None
+    filters = dict((key, key in args.only) for key in ["templates", "volatile", "persistent", "other"])
+    config = json.loads(args.config) if args.config else None
     cloudlets.Image(args.image, args.manifest).tar(config=config, **filters)
+
+parser_raw = subcommands.add_parser("raw", help="Create a raw image of the cloudlet")
+parser_raw.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_raw.add_argument("out", metavar="RAW_IMAGE_PATH", help="path to a raw image")
+parser_raw.add_argument("--config", metavar="JSON_CONFIG", help="Configure the output, leaving the source untouched")
+parser_raw.add_argument("--size", metavar="RAW_IMAGE_SIZE", type=int, help="Size of the generated raw image", default=1024*1024*1024)
+parser_raw.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
+def cmd_raw(args):
+    filters = dict((key, key in args.only) for key in ["templates", "volatile", "persistent", "other"])
+    config = json.loads(args.config)
+    cloudlets.Image(args.image, args.manifest).raw(args.out, config, args.size, **filters)
 
 parser_config = subcommands.add_parser("config", help="Configure an image in-place. If no configuration is given, show current configuration")
 parser_config.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
@@ -65,7 +76,7 @@ parser_find = subcommands.add_parser("find", help="List the contents of an image
 parser_find.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
 parser_find.add_argument("--only", nargs="+", choices=["templates","volatile","persistent","other"], default=["templates", "persistent", "other"])
 def cmd_find(args):
-    filters = dict([(key, key in args.only) for key in ["templates", "volatile", "persistent", "other"]])
+    filters = dict((key, key in args.only) for key in ["templates", "volatile", "persistent", "other"])
     for path in cloudlets.Image(args.image, args.manifest).find(**filters):
         print path
 
