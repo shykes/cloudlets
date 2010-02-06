@@ -99,9 +99,10 @@ class Image(object):
         if config is not None:
             self.set_config_defaults(config)
             self.manifest.validate_config(config)
-            templates_dir = self.copy(templates=True)
-            for template in self.find(templates=True):
-                EJSTemplate(templates_dir + template).apply(templates_dir + template, config)
+            if self.manifest.get("templates"):
+                templates_dir = self.copy(templates=True)
+                for template in self.find(templates=True):
+                    EJSTemplate(templates_dir + template).apply(templates_dir + template, config)
         tar = tarfile.open("", mode="w|", fileobj=out)
         templates = self.manifest.get("templates")
         for path in self.find(*args, **kw):
