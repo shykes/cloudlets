@@ -22,7 +22,7 @@ Installing:
 
 2. Run the install script
 
-    # python setup.pt install
+    # python setup.py install
 
 
 Examples:
