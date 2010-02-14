@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='cloudlets',
-      version='0.0.2',
+      version='0.0.3',
       author='Solomon Hykes',
       install_requires=['simplejson >= 2.0.9', 'jsonschema', 'ejs >= 0.0.1', 'argparse', 'metashelf == 0.0.1', 'mercurial', 'vm2vm'],
       package_dir = {'cloudlets' : '.'},
