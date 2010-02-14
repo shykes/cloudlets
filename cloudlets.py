@@ -13,7 +13,7 @@ import vm2vm.raw
 import jsonschema
 import simplejson as json
 from ejs import EJSTemplate
-import mercurial.hg, mercurial.ui, mercurial.error
+import mercurial.hg, mercurial.ui, mercurial.error, mercurial.dispatch
 
 def filter_path(path, include, exclude):
     if not hasattr(include, "__iter__"):
@@ -224,6 +224,6 @@ pre-diff.metashelf = python:metashelf.hg.hook_remember
 post-update.metashelf = python:metashelf.hg.hook_restore
         """
         file(hgrc_path, "w").write(hgrc)
-        subprocess.call(("hg", "-R", self.path) + cmd)
+        mercurial.dispatch.dispatch(list(("-R", self.path) + cmd))
 
     config = property(get_config, set_config)
