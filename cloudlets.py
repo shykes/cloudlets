@@ -60,17 +60,38 @@ class Manifest(dict):
         }
     config_schema = property(get_config_schema)
 
-    def validate_config(self, config):
-        """ Validate a configuration against the image's json schema. The configuration is not applied. """
-        jsonschema.validate(config, self.config_schema)
-
     def validate(self):
         """Validate contents of the manifest against the cloudlets spec"""
         jsonschema.validate(dict(self), self.specs)
 
+    def config(self, config):
+        """ Load a config dictionary and apply the manifest defaults """
+        return Config(config, manifest=self)
+
     def __init__(self, *args, **kw):
         dict.__init__(self, *args, **kw)
         self.validate()
+
+class Config(dict):
+    """ Configuration for an image """
+
+    def __init__(self, config, manifest):
+        self.manifest = manifest
+        super(self.__class__, self).__init__(**self.set_config_defaults(config))
+
+    def set_config_defaults(self, config):
+        """ Fill the given config with the defaults from the manifest if missing """
+        for field in ('args', 'persistent', 'volatile', 'templates'):
+            config.setdefault(field, {})
+        for name, schema in self.manifest['args'].items():
+            if 'default' in schema and name not in config['args']:
+                config['args'][name] = schema['default']
+        return config
+
+    def validate(self):
+        """ Validate a configuration against the image's json schema. The configuration is not applied. """
+        jsonschema.validate(dict(self), self.manifest.config_schema)
+        return self
 
 class Image(object):
 
@@ -79,13 +100,6 @@ class Image(object):
             raise ValueError("%s doesn't exist or is not a directory" % path)
         self.path = os.path.abspath(path)
         self.__manifest_file = manifest
-
-    def set_config_defaults(self, config):
-        """ Fill the given config with the defaults from the manifest if missing """
-        for name, schema in self.manifest['args'].items():
-            if 'default' in schema and name not in config['args']:
-                config['args'][name] = schema['default']
-        return config
 
     def raw(self, out, config, size, **filters):
         """ Create a raw image of the cloudlet """
@@ -107,8 +121,7 @@ class Image(object):
     def tar(self, out=sys.stdout, config=None, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         if config is not None:
-            self.set_config_defaults(config)
-            self.manifest.validate_config(config)
+            config = self.manifest.config(config).validate()
             if self.manifest.get("templates"):
                 templates_dir = self.copy(templates=True)
                 for template in self.find(templates=True):
@@ -198,8 +211,7 @@ class Image(object):
         if self.config:
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
-        self.set_config_defaults(config)
-        self.manifest.validate_config(config)
+        config = self.manifest.config(config).validate()
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)

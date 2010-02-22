@@ -1,3 +1,5 @@
-from cloudlets import Image, Manifest
 
-__all__ = [Image, Manifest]
+from cloudlets import Image, Manifest, Config
+
+__all__ = [Image, Manifest, Config]
+
