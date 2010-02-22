@@ -134,6 +134,8 @@ class Image(object):
     files = property(get_files)
 
     def chroot_path(self, path):
+        if self.path == "/":
+            return path
         if os.path.normpath(path) == self.path:
             return "/"
         return path.replace(self.path, "")
