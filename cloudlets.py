@@ -152,7 +152,7 @@ class Image(object):
             if not volatile:
                 exclude += map(re.compile, self.manifest.get("volatile", []))
             if not persistent:
-                exclude += self.manifest.get("persistent", [])
+                exclude += [re.compile("^{0}($|/)".format(p)) for p in self.manifest.get("persistent", [])]
         else:
             exclude = re.compile(".*")
             if templates:
@@ -160,7 +160,7 @@ class Image(object):
             if volatile:
                 include += map(re.compile, self.manifest.get("volatile", []))
             if persistent:
-                include += self.manifest.get("persistent", [])
+                include += [re.compile("^{0}($|/)".format(p)) for p in self.manifest.get("persistent", [])]
         return self.get_files(include=include, exclude=exclude)
 
     def get_cloudletdir(self):
