@@ -68,24 +68,43 @@ class Manifest(dict):
         """ Load a config dictionary and apply the manifest defaults """
         return Config(config, manifest=self)
 
+    def args(self, args):
+        """ Load user arguments and apply the manifest defaults """
+        return Args(args, manifest=self)
+
     def __init__(self, *args, **kw):
         dict.__init__(self, *args, **kw)
         self.validate()
+
+class Args(dict):
+
+    def __init__(self, args, manifest):
+        self.manifest = manifest
+        super(self.__class__, self).__init__(**self.defaults(args))
+
+    def defaults(self, args):
+        """ Fill the given config with the defaults from the manifest if missing """
+        for name, schema in self.manifest.args_schema.items():
+            if 'default' in schema and name not in args:
+                args[name] = schema['default']
+        return args 
+
+    def validate(self):
+        """ Validate user arguments against its manifest """
+        jsonschema.validate(dict(self), self.manifest.args_schema)
+
 
 class Config(dict):
     """ Configuration for an image """
 
     def __init__(self, config, manifest):
         self.manifest = manifest
-        super(self.__class__, self).__init__(**self.set_config_defaults(config))
+        super(self.__class__, self).__init__(self.defaults(config))
+        self["args"] = dict(Args(self["args"], self.manifest))
 
-    def set_config_defaults(self, config):
-        """ Fill the given config with the defaults from the manifest if missing """
+    def defaults(self, config):
         for field in ('args', 'persistent', 'volatile', 'templates'):
             config.setdefault(field, {})
-        for name, schema in self.manifest['args'].items():
-            if 'default' in schema and name not in config['args']:
-                config['args'][name] = schema['default']
         return config
 
     def validate(self):
