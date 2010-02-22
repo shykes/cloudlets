@@ -38,10 +38,17 @@ class Manifest(dict):
         }
     }
 
-    def get_args_schema(self):
+    @property
+    def args_schema_skeleton(self):
         """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
         return self.get("args", {})
-    args_schema = property(get_args_schema)
+
+    @property
+    def args_schema(self):
+        return {
+            "type": "object",
+            "properties": self.args_schema_skeleton
+        }
 
     def get_config_schema(self):
         """ Return the json schema which will be used to validate this image's configuration. """
@@ -52,7 +59,7 @@ class Manifest(dict):
             "ip": {
                 "interfaces": {"type": "array"}
             },
-            "args": self.args_schema
+            "args": self.args_schema_skeleton
         }
         return {
             "type": "object",
@@ -78,20 +85,21 @@ class Manifest(dict):
 
 class Args(dict):
 
-    def __init__(self, args, manifest):
-        self.manifest = manifest
+    def __init__(self, args, args_schema):
+        self.args_schema = args_schema
         super(self.__class__, self).__init__(**self.defaults(args))
 
     def defaults(self, args):
-        """ Fill the given config with the defaults from the manifest if missing """
-        for name, schema in self.manifest.args_schema.items():
+        """ Fill the given config with the defaults from the schema if missing """
+        for name, schema in self.args_schema.get("properties", {}).items():
             if 'default' in schema and name not in args:
                 args[name] = schema['default']
         return args 
 
     def validate(self):
-        """ Validate user arguments against its manifest """
-        jsonschema.validate(dict(self), self.manifest.args_schema)
+        """ Validate user arguments against its schema """
+        jsonschema.validate(dict(self), self.args_schema)
+        return self
 
 
 class Config(dict):
@@ -100,7 +108,7 @@ class Config(dict):
     def __init__(self, config, manifest):
         self.manifest = manifest
         super(self.__class__, self).__init__(self.defaults(config))
-        self["args"] = dict(Args(self["args"], self.manifest))
+        self["args"] = dict(Args(self["args"], self.manifest.args_schema))
 
     def defaults(self, config):
         for field in ('args', 'persistent', 'volatile', 'templates'):

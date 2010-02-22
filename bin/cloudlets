@@ -58,7 +58,20 @@ parser_validate.add_argument("image", metavar="IMAGE_PATH", help="path to a clou
 parser_validate.add_argument("--config", metavar="JSON_CONFIG", help="Apply JSON_CONFIG to the image", default=None)
 def cmd_validate(args):
     config = json.loads(args.config)
-    print json.dumps(cloudlets.Image(args.image, args.manifest).manifest.config(config).validate(), indent=1)
+    try:
+        print json.dumps(cloudlets.Image(args.image, args.manifest).manifest.config(config).validate(), indent=1)
+    except ValueError, e:
+        print e
+
+parser_validate_args = subcommands.add_parser("validate_args", help="Validate user args for an image")
+parser_validate_args.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
+parser_validate_args.add_argument("args", metavar="JSON ARGS", help="JSON user arguments", default=None)
+def cmd_validate_args(args):
+    image = cloudlets.Image(args.image, args.manifest)
+    try:
+        print cloudlets.Args(json.loads(args.args), image.manifest.args_schema).validate()
+    except ValueError, e:
+        print e
 
 parser_manifest = subcommands.add_parser("manifest", help="Display an image's manifest")
 parser_manifest.add_argument("image", metavar="IMAGE_PATH", help="path to a cloudlet image")
