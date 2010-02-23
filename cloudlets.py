@@ -15,6 +15,34 @@ import simplejson as json
 from ejs import EJSTemplate
 import mercurial.hg, mercurial.ui, mercurial.error, mercurial.dispatch
 
+class DictSchema(dict):
+    """ An object in the JSON-Schema format """
+
+    def __init__(self, *args, **kw):
+        input = dict(*args, **kw)
+        if "type" in input:
+            dict.__init__(self, input)
+        else:
+            dict.__init__(self, {"type": "object", "properties": input})
+        if "properties" in self:
+            for (k, prop) in self["properties"].items():
+                if "type" not in prop:
+                    self["properties"][k] = dict(DictSchema(prop))
+
+    @property
+    def defaults(self):
+        return dict(
+            (k, prop["default"])
+            for (k, prop) in self.get("properties", {}).items()
+            if "default" in prop
+        )
+
+    def validate(self, data):
+        data = dict(self.defaults, **data)
+        jsonschema.validate(data, dict(self))
+        return data
+
+
 def filter_path(path, include, exclude):
     if not hasattr(include, "__iter__"):
         include = [include]
@@ -27,98 +55,58 @@ def filter_path(path, include, exclude):
 class Manifest(dict):
     """A dictionary holding an image's metadata"""
 
-    specs = {
-        "type": "object",
-        "properties": {
+    specs = DictSchema(
+        {
             "arch"          : {"optional": True,  "type": "string", "description": "Hardware architecture. example: i386"},
             "args"          : {"optional": True,  "type": "object", "description": "List of accepted user-specified configuration arguments", "default": {}},
             "templates"     : {"optional": True,  "type": "array", "description": "List of files which are templates", "default": []},
             "persistent"    : {"optional": True,  "type": "array", "description": "List of files or directories holding persistent data", "default": []},
             "volatile"      : {"optional": True,  "type": "array", "description": "List of patterns for files whose changes should be ignored"}
         }
-    }
+    )
+    
 
-    @property
-    def args_schema_skeleton(self):
+    def get_args_schema(self):
         """ Return the json schema which will be used to validate the user-specified arguments as part of the image's overall configuration. """
-        return self.get("args", {})
-
-    @property
-    def args_schema(self):
-        return {
-            "type": "object",
-            "properties": self.args_schema_skeleton
-        }
+        return DictSchema(self.get("args", {}))
+    args_schema = property(get_args_schema)
 
     def get_config_schema(self):
         """ Return the json schema which will be used to validate this image's configuration. """
-        schema_skeleton =  {
-            "dns": {
-                "nameservers": {"type": "array"}
-            },
-            "ip": {
-                "interfaces": {"type": "array"}
-            },
-            "args": self.args_schema_skeleton
-        }
-        return {
-            "type": "object",
-            "properties": dict((key, {"type": "object", "properties": section}) for (key, section) in schema_skeleton.items())
-        }
+        return  ConfigAndArgsSchema(
+                    config_schema = {
+                        "dns": {
+                            "nameservers": {"type": "array"}
+                        },
+                        "ip": {
+                            "interfaces": {"type": "array"}
+                        }
+                    },
+                    args_schema = self.args_schema
+                )
     config_schema = property(get_config_schema)
 
     def validate(self):
         """Validate contents of the manifest against the cloudlets spec"""
-        jsonschema.validate(dict(self), self.specs)
-
-    def config(self, config):
-        """ Load a config dictionary and apply the manifest defaults """
-        return Config(config, manifest=self)
-
-    def args(self, args):
-        """ Load user arguments and apply the manifest defaults """
-        return Args(args, manifest=self)
+        return self.specs.validate(self)
 
     def __init__(self, *args, **kw):
         dict.__init__(self, *args, **kw)
-        self.validate()
+        self.update(self.validate())
 
-class Args(dict):
+class ConfigAndArgsSchema(object):
 
-    def __init__(self, args, args_schema):
-        self.args_schema = args_schema
-        super(self.__class__, self).__init__(**self.defaults(args))
+    def __init__(self, config_schema, args_schema):
+        self.config_schema = DictSchema(config_schema)
+        self.args_schema = DictSchema(args_schema)
 
-    def defaults(self, args):
-        """ Fill the given config with the defaults from the schema if missing """
-        for name, schema in self.args_schema.get("properties", {}).items():
-            if 'default' in schema and name not in args:
-                args[name] = schema['default']
-        return args 
-
-    def validate(self):
-        """ Validate user arguments against its schema """
-        jsonschema.validate(dict(self), self.args_schema)
-        return self
-
-
-class Config(dict):
-    """ Configuration for an image """
-
-    def __init__(self, config, manifest):
-        self.manifest = manifest
-        super(self.__class__, self).__init__(self.defaults(config))
-        self["args"] = dict(Args(self["args"], self.manifest.args_schema))
-
-    def defaults(self, config):
-        for field in ('args', 'persistent', 'volatile', 'templates'):
-            config.setdefault(field, {})
-        return config
-
-    def validate(self):
-        """ Validate a configuration against the image's json schema. The configuration is not applied. """
-        jsonschema.validate(dict(self), self.manifest.config_schema)
-        return self
+    def validate(self, data):
+        config = dict((k, v) for (k, v) in data.items() if k != "args")
+        args = data.get("args", {})
+        return dict(
+            self.config_schema.validate(config),
+            args=self.args_schema.validate(args)
+        )
 
 class Image(object):
 
@@ -148,7 +136,7 @@ class Image(object):
     def tar(self, out=sys.stdout, config=None, *args, **kw):
         """ Wrap the image in an uncompressed tar stream, ignoring volatile files, and write it to stdout """
         if config is not None:
-            config = self.manifest.config(config).validate()
+            config = self.manifest.config_schema.validate(config)
             if self.manifest.get("templates"):
                 templates_dir = self.copy(templates=True)
                 for template in self.find(templates=True):
@@ -238,7 +226,7 @@ class Image(object):
         if self.config:
             raise ValueError("Already configured: %s" % self.config)
         file(self.config_file, "w").write("")
-        config = self.manifest.config(config).validate()
+        config = self.manifest.config_schema.validate(config)
         for template in self.manifest.get("templates", []):
             print "Applying template %s with %s" % (template, config)
             EJSTemplate(self.unchroot_path(template)).apply(self.unchroot_path(template), config)
